@@ -42,12 +42,10 @@ io.on("connection", (socket) => {
           });
         } else {
           if (item) {
-            console.log(count, item);
-
             invalidRecords.push({
               email: record[0],
-              lastName: record[1],
-              firstName: record[2],
+              firstName: record[1],
+              lastName: record[2],
             });
           }
         }
@@ -82,37 +80,39 @@ io.on("connection", (socket) => {
   const processRecords = async () => {
     let count = 0;
     const processedData = [];
-    for (const item of validRecords) {
-      const { email, lastName, firstName } = item;
+    await Promise.all(
+      validRecords.map(async (item) => {
+        const { email, lastName, firstName } = item;
 
-      await new Promise((resolve) => setTimeout(resolve, 100)).then(() => {
-        count++;
+        await new Promise((resolve) => setTimeout(resolve, 100)).then(() => {
+          count++;
 
-        const fullName = `${firstName} ${lastName}`;
-        processedData.push({
-          fullName,
-          email: email,
+          const fullName = `${firstName} ${lastName}`;
+          processedData.push({
+            fullName,
+            email: email,
+          });
+          const progress = Math.floor(
+            (processedData.length / validRecords.length) * 100
+          );
+          const message = `Processing record ${count}`;
+          socket.emit("processProgress", {
+            message,
+            progress,
+            completed: false,
+          });
         });
-        const progress = Math.floor(
-          (processedData.length / validRecords.length) * 100
-        );
-        const message = `Processing record ${count}`;
-        socket.emit("processProgress", {
-          message,
-          progress,
-          completed: false,
-        });
-      });
-      if (count === validRecords.length) {
-        // processing completed
-        socket.emit("processProgress", {
-          message: `Processing completed for ${processedData.length} records`,
-          progress: 100,
-          completed: true,
-        });
-        writeToFile(processedData);
-      }
-    }
+        if (count === validRecords.length) {
+          // processing completed
+          socket.emit("processProgress", {
+            message: `Processing completed for ${processedData.length} records`,
+            progress: 100,
+            completed: true,
+          });
+          writeToFile(processedData);
+        }
+      })
+    );
   };
 
   socket.on("startValidation", (data) => {
@@ -120,7 +120,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("startProcessing", () => {
-    console.log("Start Processing");
     processRecords();
   });
 
