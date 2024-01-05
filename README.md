@@ -24,10 +24,11 @@ This is a Fullstack application built with ReactJS for the frontend, Node.js for
   npm install
   ```
 
-3.Run the backend server.
+3. Run the backend server.
     
     ```bash
     node server.js
+    ```
 
 - The backend server will run on http://localhost:5000.
 
